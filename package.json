@@ -1,0 +1,23 @@
+{
+  "name": "chaibackend",
+  "version": "1.0.0",
+  "description": "basic app to deploy",
+  "keywords": [
+    "node",
+    "chai"
+  ],
+  "license": "ISC",
+  "author": "ahsan",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon index.js"
+  },
+  "dependencies": {
+    "dotenv": "^17.4.2",
+    "expess": "^0.0.1-security",
+    "express": "^5.2.1",
+    "nodemon": "^3.1.14"
+  }
+}
