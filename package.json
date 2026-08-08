@@ -1,7 +1,7 @@
 {
   "name": "chaibackend",
   "version": "1.0.0",
-  "description": "basic app to deploy",
+  "description": "basic app of backend",
   "keywords": [
     "node",
     "chai"
