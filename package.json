@@ -19,5 +19,8 @@
     "expess": "^0.0.1-security",
     "express": "^5.2.1",
     "nodemon": "^3.1.14"
+  },
+  "devDependencies": {
+    "prettier": "^3.9.6"
   }
 }
