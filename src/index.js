@@ -1,4 +1,3 @@
-// require('dotenv').config({path: './.env'}); 
 
 import dotenv from 'dotenv';
 import express from 'express';
@@ -16,7 +15,25 @@ app.get('/', (req, res, next) =>{
 
 const port = process.env.PORT || 8000;
 
-connectDB();
+connectDB()
+.then(() => {
+  app.on('error', (err) => {
+    console.error("Error in app: ", err);
+    throw err;
+  });
+  app.listen(port, () => {
+    console.log(`Server is running on http://localhost:${port}`)
+  })
+})
+.catch((err) => {
+  console.error("Error starting server: ", err);
+});
+
+
+
+
+
+
 
 // ;(async () => {
 //   try{
