@@ -5,13 +5,11 @@ import mongoose from 'mongoose';
 import connectDB from './db/index.js';
 import {DB_NAME} from './constants.js';
 dotenv.config({path: './.env'});
+import { app } from './app.js';   
 
 
-const app = express();
 
-app.get('/', (req, res, next) =>{
-  res.send("<h1>Hello World Chai or Code</h1>")
-})
+
 
 const port = process.env.PORT || 8000;
 
