@@ -1,7 +1,7 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
 import {ApiError} from "../utils/ApiError.js";
 import {User} from "../models/user.model.js";
-import { uploadOnCloudinary } from "../utils/cloudinary.js";
+import { uploadOnCloudinary, deleteFromCloudinary } from "../utils/cloudinary.js";
 import { upload } from "../middlewares/multer.middleware.js";
 import {ApiResponse} from "../utils/ApiResponse.js";
 import { availableMemory } from "node:process";
@@ -296,6 +296,10 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Avatar file is missing");
   }
 
+  const oldUser = await User.findById(req.user._id);
+  const oldAvatarUrl = oldUser?.avatar;
+
+
   const avatar = await uploadOnCloudinary(avatarLocalPath);
 
   
@@ -314,6 +318,10 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
 
   ).select("-password")
 
+    if (oldAvatarUrl) {
+    await deleteFromCloudinary(oldAvatarUrl);
+  }
+  
     return res
   .status(200)
   .json(
@@ -332,6 +340,9 @@ const updateUserCoverImage = asyncHandler(async (req, res) => {
 
   //how can i delete old image
 
+  const oldUser = await User.findById(req.user._id);
+  const oldCoverImageUrl = oldUser?.coverImage;
+
   const coverImage = await uploadOnCloudinary(coverImageLocalPath);
 
   
@@ -339,7 +350,7 @@ const updateUserCoverImage = asyncHandler(async (req, res) => {
     throw new ApiError(500, "Failed to upload image to Cloudinary");
   } 
 
-  const user = User.findByIdAndUpdate(
+  const user = await User.findByIdAndUpdate(
     req.user._id,
     {
       $set: {
@@ -348,7 +359,11 @@ const updateUserCoverImage = asyncHandler(async (req, res) => {
     },
     {new: true}
 
-  ).select("-password")
+  ).select("-password");
+
+   if (oldCoverImageUrl) {
+    await deleteFromCloudinary(oldCoverImageUrl);
+  }
 
     return res
   .status(200)
@@ -370,7 +385,7 @@ const getUserChannelProfile = asyncHandler(async(req, res) => {
   }
 },
 {
-  lookup:{
+  $lookup:{
     from:"subscriptions",
     localField: "_id",
     foreignField: "channel",
@@ -379,7 +394,7 @@ const getUserChannelProfile = asyncHandler(async(req, res) => {
   }
 },
 {
-  lookup:{
+  $lookup:{
     from:"subscriptions",
     localField: "_id",
     foreignField: "subscriber",
@@ -418,7 +433,7 @@ const getUserChannelProfile = asyncHandler(async(req, res) => {
 }
 ])
 
-console.log(channel) // is ka jawab kia aaega, ye aggregate return kia krta ha 
+console.log(channel) // is ka jawab kia aaega, ye aggregate return kia krta ha -- aggregate() hamesha ek ARRAY return karta hai, chahe sirf ek document match kare (jo yahan hoga, kyunki username unique hai)
 
 if(!channel?.length){
   throw new ApiError(404, "Chanel does not exist")
@@ -438,7 +453,7 @@ const getWatchHistory = asyncHandler(async(req, res) => {
       $match: {
         _id: new mongoose.Types.ObjectId(req.user._id)
         // req.user._id direct use nhi kr skte yaha mongose kaam nhi kre ga is lye mongose ki object id banai pare gi , 
-        // ye new kya hota ha or ye yaha kia kr rha ha 
+        // ye new kya hota ha or ye yaha kia kr rha ha --ye ek class hai jiska instance banate ho (new keyword se)
       }
 
     },
@@ -450,7 +465,7 @@ const getWatchHistory = asyncHandler(async(req, res) => {
         as: "watchHistory",
         pipeline: [  //sub aggregate
           {
-            $lookup:
+            $lookup: //lookup hamesha ek array deta ha
             {
               from: "users",
               localField: "owner",
@@ -463,7 +478,7 @@ const getWatchHistory = asyncHandler(async(req, res) => {
                     email: 1,
                     avatar: 1,
 
-                  }  // is ko me agr dosre lookup k bahar likhta to kia hota?
+                  }  // is ko me agr dosre lookup k bahar likhta to kia hota? - poore document ke andar sirf fullName/email/avatar select ho jate — video ki baaki details (title, thumbnail, etc.) sab chhoot jatin! Isliye $project andar (sub-pipeline mein) rakhna zaroori tha — taake sirf owner ka data limit ho, video ka data affected na ho.
                 }
               ]
             }
@@ -474,7 +489,7 @@ const getWatchHistory = asyncHandler(async(req, res) => {
                 $first: "$owner"
               }
 
-              //frontend wala ab owner.fullName, etc access krskta ha
+              //frontend wala ab video.owner.fullName, etc access krskta ha
             }
           }
         ]
@@ -483,11 +498,11 @@ const getWatchHistory = asyncHandler(async(req, res) => {
 
 
   ])
-  return re
+  return res
   .status(200)
   .json(
     new ApiResponse(200, "Watch History fetched successfully",user[0].watchHistory)  
-    //ye yaha user[0] bh to bhjskte the ye .watch history kyn lagaya 
+    //ye yaha user[0] bh to bhjskte the ye .watch history kyn lagaya -- Yahan sirf watch history chahiye — user[0] mein poora user object hoga (fullName, email, avatar, aur watchHistory sab kuch)
   )
 })
 

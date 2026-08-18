@@ -28,7 +28,8 @@ const router = Router();
   router.route("/update-account").patch(verifyJWT, updateAccountDetails);
  // patch kb use krte hn
   router.route("/avatar").patch(verifyJWT,upload.single("avatar"),  updateUserAvatar);
-  //patch shayad is lye use krte jb hame kch cheezein update krani ho
+  //patch shayad is lye use krte jb hame kch cheezein update krani ho -- PUT — poora resource replace karta hai (saari fields dobara bhejni padti hain, jo missing hon wo delete ho jati hain)
+//PATCH — sirf specific fields update karta hai (baaki sab as-is rehta hai)
 
   router.route("/coverImage").patch(verifyJWT,upload.single("coverImage"),  updateUserCoverImage);
 
